@@ -54,16 +54,32 @@ class Bot:
                 )
 
     def start_scheduler(self, update, context):
+        if update.effective_chat.id not in self.__allowed_chats:
+            logging.warn(
+                "Attempted unauthorised"
+                "access from chat "+str(update.effective_chat.id)
+            )
+            return
         self.run_scheduler = True
         self.send_message(id, "Started scheduler")
 
     def stop_scheduler(self, update, context):
+        if update.effective_chat.id not in self.__allowed_chats:
+            logging.warn(
+                "Attempted unauthorised"
+                "access from chat "+str(update.effective_chat.id)
+            )
+            return
         self.run_scheduler = False
         self.send_message(id, "Stopped scheduler")
 
     def request_screenshot_handler(self, update, context):
         try:
             if update.effective_chat.id not in self.__allowed_chats:
+                logging.warn(
+                    "Attempted unauthorised"
+                    "access from chat "+str(update.effective_chat.id)
+                )
                 return
             screenshot = self.__controller.take_screenshot()
             self.send_screenshot(update.effective_chat.id, screenshot)
