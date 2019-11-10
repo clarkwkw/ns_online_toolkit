@@ -1,1 +1,6 @@
 .vscode
+*.whl
+*.pyc
+**/__pycache__
+config.json
+cloud_credentials.json

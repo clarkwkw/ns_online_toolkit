@@ -1,0 +1,4 @@
+python-telegram-bot==12.2.0
+Pillow==6.2.1
+google-cloud-vision-0.39.0
+schedule==0.6.0
