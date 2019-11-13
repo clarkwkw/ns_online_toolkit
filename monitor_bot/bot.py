@@ -49,7 +49,7 @@ class Bot:
                         )
             elif not status.process_exists:
                 self.send_message(
-                    id,
+                    update.effective_chat.id,
                     "Process is dead, RIP"
                 )
 
@@ -61,7 +61,7 @@ class Bot:
             )
             return
         self.run_scheduler = True
-        self.send_message(id, "Started scheduler")
+        self.send_message(update.effective_chat.id, "Started scheduler")
 
     def stop_scheduler(self, update, context):
         if update.effective_chat.id not in self.__allowed_chats:
@@ -71,7 +71,7 @@ class Bot:
             )
             return
         self.run_scheduler = False
-        self.send_message(id, "Stopped scheduler")
+        self.send_message(update.effective_chat.id, "Stopped scheduler")
 
     def request_screenshot_handler(self, update, context):
         try:
