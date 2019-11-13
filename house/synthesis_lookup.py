@@ -107,12 +107,29 @@ def resolve_machines_dep(ns_data, machines):
     return all_machines_dep
 
 
+def count_component(graph, component):
+    if graph["name"] == component:
+        return graph["count"]
+
+    count = 0
+    for unit_dep in graph["unit_deps"]:
+        count += graph["count"]*count_component(unit_dep, component)
+
+    return count
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "query",
         help="item to search",
         type=str
+    )
+    parser.add_argument(
+        "component",
+        help="component to count",
+        type=str,
+        nargs="?"
     )
     parser.add_argument(
         "--mm",
@@ -132,15 +149,21 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
     with open(args.data, "r", encoding="utf-8") as f:
         ns_data = json.load(f)
         ns_data["all_items"] = {i["name"]: i for i in ns_data["all_items"]}
 
     query = args.query.strip()
+    component = None
     if query not in ns_data["all_items"]:
         print(f"{query} not found, try again.")
         exit(-1)
+
+    if args.component is not None:
+        component = args.component.strip()
+        if component not in ns_data["all_items"]:
+            print(f"{component} not found, try again.")
+            exit(-1)
 
     graph, required_machines = recursive_discover_dependencies(
                                     ns_data,
@@ -155,40 +178,44 @@ if __name__ == "__main__":
             machines_prereq.append(rm)
         else:
             machines_manufactured.append(rm)
-    required_fundamentals = flatten_and_simplify_dependencies(graph)
 
-    if args.mm:
-        required_fundamentals = combine_flattened_dependencies(
-                                    required_fundamentals,
-                                    resolve_machines_dep(
-                                        ns_data,
-                                        machines_prereq
+    if component is None:
+        required_fundamentals = flatten_and_simplify_dependencies(graph)
+
+        if args.mm:
+            required_fundamentals = combine_flattened_dependencies(
+                                        required_fundamentals,
+                                        resolve_machines_dep(
+                                            ns_data,
+                                            machines_prereq
+                                        )
                                     )
-                                )
 
-    if args.output is None:
-        print("Result:")
-        print(json.dumps(
-                graph,
-                indent=4,
-                ensure_ascii=False
-        ))
-        print(json.dumps(
-                required_fundamentals,
-                indent=4,
-                ensure_ascii=False
-        ))
-        print("Equipment manufactured:", machines_manufactured)
-        print("Extra machines required:", machines_prereq)
+        if args.output is None:
+            print("Result:")
+            print(json.dumps(
+                    graph,
+                    indent=4,
+                    ensure_ascii=False
+            ))
+            print(json.dumps(
+                    required_fundamentals,
+                    indent=4,
+                    ensure_ascii=False
+            ))
+            print("Equipment manufactured:", machines_manufactured)
+            print("Extra machines required:", machines_prereq)
+        else:
+            with open(args.output, "w", encoding="utf-8") as f:
+                json.dump({
+                        "graph": graph,
+                        "machine manufactured in the process": machines_manufactured,  # noqa: E501
+                        "extra machines required": machines_prereq,
+                        "fundamentals": required_fundamentals
+                    },
+                    f,
+                    indent=4,
+                    ensure_ascii=False
+                )
     else:
-        with open(args.output, "w", encoding="utf-8") as f:
-            json.dump({
-                    "graph": graph,
-                    "machine manufactured in the process": machines_manufactured,  # noqa: E501
-                    "extra machines required": machines_prereq,
-                    "fundamentals": required_fundamentals
-                },
-                f,
-                indent=4,
-                ensure_ascii=False
-            )
+        print(count_component(graph, component))
