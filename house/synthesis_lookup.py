@@ -161,7 +161,8 @@ if __name__ == "__main__":
 
     if args.component is not None:
         component = args.component.strip()
-        if component not in ns_data["all_items"]:
+        if component not in ns_data["all_items"]\
+                and component not in ns_data["available_from_digging"]:
             print(f"{component} not found, try again.")
             exit(-1)
 
